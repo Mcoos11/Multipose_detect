@@ -1,5 +1,5 @@
 import cv2
-import random
+import random, os
 import numpy as np
 import mediapipe as mp
 import operator as op
@@ -10,7 +10,7 @@ mp_pose = mp.solutions.pose
 # global variables
 pose_estimator = []
 
-cap = cv2.VideoCapture("input1.mp4")
+cap = cv2.VideoCapture(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_inputs', 'input1.mp4'))
 # cap = cv2.VideoCapture(3)
 
 whT = 320 # word hight Target
@@ -22,8 +22,8 @@ classNames = []
 with open(classesFile, 'rt') as f:
     classNames = f.read().rstrip('\n').split('\n')
 
-modelConfiguration = 'yolov3_320.cfg'
-modelNames = 'yolov3_320.weights'
+modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3_320.cfg')
+modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3_320.weights')
 
 class person:
     x = None
