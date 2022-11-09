@@ -1,5 +1,5 @@
 import cv2
-import random, os
+import random, os, re
 import numpy as np
 import mediapipe as mp
 import operator as op
@@ -11,7 +11,7 @@ mp_pose = mp.solutions.pose
 pose_estimator = []
 
 # cap = cv2.VideoCapture(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_inputs', 'input1.mp4'))
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(3)
 
 whT = 320 # word hight Target
 confThreshold = .5
@@ -50,9 +50,15 @@ modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'y
 modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-320.weights')
 net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelNames)
 
-if net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA):
+cv_info = str(cv2.getBuildInformation().strip().split('\n')[99])
+cv_info = cv_info.replace(re.search(".+:\s+", cv_info).group(0),"")[:3]
+
+if cv_info == 'YES':
+    print('USING CUDA')
+    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
     net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 else:
+    print('USING CPU')
     modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-tiny.cfg')
     modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-tiny.weights')
 
