@@ -10,8 +10,8 @@ mp_pose = mp.solutions.pose
 # global variables
 pose_estimator = []
 
-# cap = cv2.VideoCapture(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_inputs', 'input1.mp4'))
-cap = cv2.VideoCapture(3)
+cap = cv2.VideoCapture(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_inputs', 'input1.mp4'))
+# cap = cv2.VideoCapture(3)
 
 whT = 320 # word hight Target
 confThreshold = .5
@@ -46,8 +46,8 @@ global objects
 objects = []
 global CamH, CamW, CamC, CamDiag
 
-modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-320.cfg')
-modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-320.weights')
+modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-608.cfg')
+modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-608.weights')
 net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelNames)
 
 cv_info = str(cv2.getBuildInformation().strip().split('\n')[99])
@@ -66,6 +66,17 @@ else:
     net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
     net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
+def setMinDistance():
+    global min_distance
+    if CamDiag <= 1469:
+        min_distance = CamDiag * .08
+    elif CamDiag > 1469 and CamDiag <= 2210:
+        min_distance = CamDiag * .19
+    else:
+        print("CAM RESOLUTION DON'T SUPPORTED")
+        min_distance = 1000
+
+    print("distance < ", min_distance)
 def getId(x, y, w, h):
     distances = []
     id = None
@@ -75,7 +86,8 @@ def getId(x, y, w, h):
         for object in objects:
             distances.append(((object.x - x)**2 + (object.y - y)**2)**.5)
         distance = min(distances)
-        if(distance < CamDiag * .08): #przemyśleć
+
+        if(distance < min_distance): #przemyśleć
             id = distances.index(distance)
             objects[id].id = id
             objects[id].x = x
@@ -121,6 +133,7 @@ def findObjects(datasets, image):
 success, img = cap.read()
 CamH, CamW, CamC = img.shape
 CamDiag = (CamH**2 + CamW**2)**.5
+setMinDistance()
 
 while cap.isOpened():
     success, img = cap.read()
@@ -144,6 +157,11 @@ while cap.isOpened():
     for object in objects:
         if object.pose_estimator == "empty":
             object.pose_estimator = mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6)
+
+        if object.x < 0:
+            object.x = 0
+        if object.y < 0:
+            object.y =0
 
         masked_img = img[object.y:object.y+object.height, object.x:object.x+object.width]
         if not masked_img.any():
