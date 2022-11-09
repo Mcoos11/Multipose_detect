@@ -10,8 +10,8 @@ mp_pose = mp.solutions.pose
 # global variables
 pose_estimator = []
 
-cap = cv2.VideoCapture(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_inputs', 'input1.mp4'))
-# cap = cv2.VideoCapture(3)
+# cap = cv2.VideoCapture(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_inputs', 'input1.mp4'))
+cap = cv2.VideoCapture(1)
 
 whT = 320 # word hight Target
 confThreshold = .5
@@ -21,9 +21,6 @@ classesFile = 'coco.names'
 classNames = []
 with open(classesFile, 'rt') as f:
     classNames = f.read().rstrip('\n').split('\n')
-
-modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3_320.cfg')
-modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3_320.weights')
 
 class person:
     x = None
@@ -47,10 +44,21 @@ class person:
 
 global objects
 objects = []
+global CamH, CamW, CamC, CamDiag
 
+modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-320.cfg')
+modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-320.weights')
 net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelNames)
-net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA) #może uda się uruchomić na CUDA
+
+if net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA):
+    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+else:
+    modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-tiny.cfg')
+    modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-tiny.weights')
+
+    net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelNames)
+    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
 def getId(x, y, w, h):
     distances = []
@@ -61,7 +69,7 @@ def getId(x, y, w, h):
         for object in objects:
             distances.append(((object.x - x)**2 + (object.y - y)**2)**.5)
         distance = min(distances)
-        if(distance < 60): #przemyśleć
+        if(distance < CamDiag * .08): #przemyśleć
             id = distances.index(distance)
             objects[id].id = id
             objects[id].x = x
@@ -98,10 +106,15 @@ def findObjects(datasets, image):
         if classNames[classIds[i]] == 'person':
             box = bBox[i]
             x, y, w, h = box[0], box[1], box[2], box[3]
+            x = x - int(CamDiag * .015)
+            w = w + int(CamDiag * .015)
             id = getId(x, y, w, h)
-            cv2.rectangle(image, (x - 5, y), (x + w + 5, y + h), (255, 0, 255))
+            cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 255))
             cv2.putText(image, f'{classNames[classIds[i]].upper()} - {int(confs[i] * 100)}% : {id}', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 255), 1)
 
+success, img = cap.read()
+CamH, CamW, CamC = img.shape
+CamDiag = (CamH**2 + CamW**2)**.5
 
 while cap.isOpened():
     success, img = cap.read()
