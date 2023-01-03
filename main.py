@@ -1,17 +1,48 @@
 import cv2
-import random, os, re
+import random, os, re, time
 import numpy as np
 import mediapipe as mp
 import operator as op
 
+exit = False
+while(True):
+    print("MENU")
+    print('"v" - detekcja z wideo')
+    print('"c" - detekcja z kamery')
+    print('"q" - wyjście')
+    choice = input("Wybór: ")
+
+    if choice == "q":
+        exit = True
+        break
+    elif choice == "v":
+        file_name = input("Wprowadź nazwę pliku:\n")
+        cap = cv2.VideoCapture(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_inputs', file_name))
+        if cap.isOpened():
+            break
+        else:
+            print("Brak pliku!")
+            print("Nazwa powinna zawierać rozszerzenie!")
+    elif choice == "c":
+            cam_n = input("Wprowadź nr kamery (zazwyczaj 0):\n")
+            cap = cv2.VideoCapture(int(cam_n))
+            if cap.isOpened():
+                break
+            else:
+                print("Błąd odczytu kamery")
+    else:
+        print("Brak opcji")
+
+
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-# global variables
 pose_estimator = []
 
-cap = cv2.VideoCapture(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_inputs', 'input1.mp4'))
-# cap = cv2.VideoCapture(3)
+# do pomiaru FPS
+prev_frame_time = 0
+new_frame_time = 0
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 whT = 320 # word hight Target
 confThreshold = .5
@@ -46,32 +77,12 @@ global objects
 objects = []
 global CamH, CamW, CamC, CamDiag
 
-modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-608.cfg')
-modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-608.weights')
-net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelNames)
-
-cv_info = str(cv2.getBuildInformation().strip().split('\n')[99])
-cv_info = cv_info.replace(re.search(".+:\s+", cv_info).group(0),"")[:3]
-
-if cv_info == 'YES':
-    print('USING CUDA')
-    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
-else:
-    print('USING CPU')
-    modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-tiny.cfg')
-    modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-tiny.weights')
-
-    net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelNames)
-    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-
 def setMinDistance():
     global min_distance
     if CamDiag <= 1469:
-        min_distance = CamDiag * .08
+        min_distance = CamDiag * .11
     elif CamDiag > 1469 and CamDiag <= 2210:
-        min_distance = CamDiag * .19
+        min_distance = CamDiag * .15
     else:
         print("CAM RESOLUTION DON'T SUPPORTED")
         min_distance = 1000
@@ -87,7 +98,7 @@ def getId(x, y, w, h):
             distances.append(((object.x - x)**2 + (object.y - y)**2)**.5)
         distance = min(distances)
 
-        if(distance < min_distance): #przemyśleć
+        if(distance < min_distance):
             id = distances.index(distance)
             objects[id].id = id
             objects[id].x = x
@@ -119,7 +130,7 @@ def findObjects(datasets, image):
                 classIds.append(classId)
                 confs.append(float(confidence))
         break
-    indices = cv2.dnn.NMSBoxes(bBox, confs, confThreshold, nmsThreshold) # usuwa zduplikowane wyktycia
+    indices = cv2.dnn.NMSBoxes(bBox, confs, confThreshold, nmsThreshold) # usuwa zduplikowane wykrycia
     for i in indices:
         if classNames[classIds[i]] == 'person':
             box = bBox[i]
@@ -130,60 +141,90 @@ def findObjects(datasets, image):
             cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 255))
             cv2.putText(image, f'{classNames[classIds[i]].upper()} - {int(confs[i] * 100)}% : {id}', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 255), 1)
 
-success, img = cap.read()
-CamH, CamW, CamC = img.shape
-CamDiag = (CamH**2 + CamW**2)**.5
-setMinDistance()
+if not exit:
+    modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-320.cfg')
+    modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-320.weights')
+    net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelNames)
 
-while cap.isOpened():
+    cv_info = str(cv2.getBuildInformation().strip().split('\n')[99])
+    cv_info = cv_info.replace(re.search(".+:\s+", cv_info).group(0), "")[:3]
+
+    if cv_info == 'YES':
+        print('USING CUDA')
+        net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+        net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+    else:
+        print('USING CPU')
+        modelConfiguration = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-tiny.cfg')
+        modelNames = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo', 'yolov3-tiny.weights')
+
+        net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelNames)
+        net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+        net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+
+
     success, img = cap.read()
-    if not success:
-        print("Ignoring empty camera frame.")
-        continue
-    ##YOLO------------------
+    CamH, CamW, CamC = img.shape
+    CamDiag = (CamH ** 2 + CamW ** 2) ** .5
+    setMinDistance()
 
-    # sieć potrzebuje formatu blob, więc konversja
-    blob = cv2.dnn.blobFromImage(img, 1/255, (whT, whT), [0, 0, 0], 1, crop=False)
-    net.setInput(blob)
+    while cap.isOpened():
+        success, img = cap.read()
+        if not success:
+            break
 
-    layerNames = net.getLayerNames()
-    outputNames = [layerNames[i - 1] for i in net.getUnconnectedOutLayers()]
+        ##YOLOv3------------------
 
-    outputs = net.forward(outputNames)
-    findObjects(outputs, img)
+        # sieć potrzebuje formatu blob - konwersja
+        blob = cv2.dnn.blobFromImage(img, 1/255, (whT, whT), [0, 0, 0], 1, crop=False)
+        net.setInput(blob)
 
-    ##MEDIAPIPE-------------
+        layerNames = net.getLayerNames()
+        outputNames = [layerNames[i - 1] for i in net.getUnconnectedOutLayers()]
 
-    for object in objects:
-        if object.pose_estimator == "empty":
-            object.pose_estimator = mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6)
+        outputs = net.forward(outputNames)
+        findObjects(outputs, img)
 
-        if object.x < 0:
-            object.x = 0
-        if object.y < 0:
-            object.y =0
+        ##MEDIAPIPE-------------
 
-        masked_img = img[object.y:object.y+object.height, object.x:object.x+object.width]
-        if not masked_img.any():
-            print(object.y,object.height, object.x,object.width)
-            continue
-        masked_img = cv2.cvtColor(masked_img, cv2.COLOR_BGR2RGB)
-        masked_img.flags.writeable = False
+        for object in objects:
+            if object.pose_estimator == "empty":
+                object.pose_estimator = mp_pose.Pose(min_detection_confidence=0.6, min_tracking_confidence=0.6)
 
-        results = object.pose_estimator.process(masked_img)
+            if object.x < 0:
+                object.x = 0
+            if object.y < 0:
+                object.y =0
 
-        masked_img.flags.writeable = True
-        masked_img = cv2.cvtColor(masked_img, cv2.COLOR_RGB2BGR)
+            masked_img = img[object.y:object.y+object.height, object.x:object.x+object.width]
+            if not masked_img.any():
+                print(object.y,object.height, object.x,object.width)
+                continue
+            masked_img = cv2.cvtColor(masked_img, cv2.COLOR_BGR2RGB)
+            masked_img.flags.writeable = False
 
-        mp_drawing.draw_landmarks(masked_img, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                                  mp_drawing.DrawingSpec(color=object.points_color, thickness=2, circle_radius=2),
-                                  mp_drawing.DrawingSpec(color=object.lines_color, thickness=2, circle_radius=2))
+            results = object.pose_estimator.process(masked_img)
 
-        img[object.y:object.y + object.height, object.x:object.x + object.width] = masked_img
+            masked_img.flags.writeable = True
+            masked_img = cv2.cvtColor(masked_img, cv2.COLOR_RGB2BGR)
 
-    cv2.imshow("Image", img)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+            mp_drawing.draw_landmarks(masked_img, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
+                                      mp_drawing.DrawingSpec(color=object.points_color, thickness=2, circle_radius=2),
+                                      mp_drawing.DrawingSpec(color=object.lines_color, thickness=2, circle_radius=2))
 
-cap.release()
-cv2.destroyAllWindows()
+            img[object.y:object.y + object.height, object.x:object.x + object.width] = masked_img
+
+        # pomiar FPS
+        new_frame_time = time.time()
+        fps = 1 / (new_frame_time - prev_frame_time)
+        prev_frame_time = new_frame_time
+        fps = int(fps)
+        fps = str(fps)
+        cv2.putText(img, fps, (3, 25), font, 1, (90, 255, 0), 2, cv2.LINE_AA)
+
+        cv2.imshow("Image", img)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
