@@ -18,7 +18,7 @@ https://pjreddie.com/darknet/yolo/
 <h3>Użycie</h3>
 Program ma zaimplementowane dwa tryby pracy: detekcja z kamery i detekcja z pliku wideo. </br>
 Wybór następuje w menu.</br></br>
-![img.png](img.png)
+![img_1.png](img_1.png)
 </br></br>
 
 <ul>
