@@ -21,7 +21,6 @@ Wybór następuje w menu.</br></br>
 <p align="center">
     <img src="https://github.com/Mcoos11/Multipose_detect/blob/main/readme_img/img_1.png" />
 </p>
-![alt text](https://github.com/Mcoos11/Multipose_detect/blob/main/readme_img/img_1.png?raw=true)
 </br></br>
 
 <ul>
