@@ -10,7 +10,8 @@ Poradnik konfiguracji OpenCV dla techonologii CUDA:</br>
 https://medium.com/geekculture/setup-opencv-dnn-module-with-cuda-backend-support-for-windows-7f1856691da3
 </br></br>
 Aplikacja wykorzystuje narzędzie YOLOv3. Do poprawnego działania narzędzia wymagane jest pobranie ze strony narzędzia</br>
-plików konfiguracyjnego (.cfg) oraz z wagami sieci (.weights). W przypadku uruchomienia programu tylko na CPU </br>
+plików konfiguracyjnego (.cfg) oraz z wagami sieci (.weights). Następnie umiesczenie ich w folderze "yolo" w głównym folderze aplikacji</b>
+z nazwami "yolov3-[<i>wersja np. tiny</i>].[<i>rozszerzenie weights lub cfg</i>]".  W przypadku uruchomienia programu tylko na CPU </br>
 zaleca się pobranie wersji tiny a w przypadku użycia technologi CUDA wersji 320.</br>
 Strona narzędzia YOLOv3:</br>
 https://pjreddie.com/darknet/yolo/
