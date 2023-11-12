@@ -18,9 +18,9 @@ https://pjreddie.com/darknet/yolo/
 <h3>Użycie</h3>
 Program ma zaimplementowane dwa tryby pracy: detekcja z kamery i detekcja z pliku wideo. </br>
 Wybór następuje w menu.</br></br>
-<div style="text-align:center">
+<p align="center">
     <img src="https://github.com/Mcoos11/Multipose_detect/blob/main/readme_img/img_1.png" />
-</div>
+</p>
 ![alt text](https://github.com/Mcoos11/Multipose_detect/blob/main/readme_img/img_1.png?raw=true)
 </br></br>
 
