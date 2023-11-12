@@ -2,7 +2,7 @@
 Podstawową funkcjonalnością programu jest detekcja wielu sylwetyek na strumieniu wideo z kamery lub pliku z nagraniem.
 
 <h3>Wymagania</h3>
-Aby program mógł działać potrzebane jest środowisko Python w wersji min. 3.10 z zainstolowaną biblioteką</br>
+Aby program mógł działać potrzebane jest środowisko Python w wersji 3.10 z zainstolowaną biblioteką</br>
 Mediapipe oraz Opencv. Program pozwala na wykorzystanie technologii CUDA, natomiast do poprawnego</br>
 działania z tą technologią wymagane jest ręczne zbudowanie biblioteki OpenCV dla konkretnego sprzętu.</br>
 </br>
