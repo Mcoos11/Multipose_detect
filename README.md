@@ -11,8 +11,8 @@ https://medium.com/geekculture/setup-opencv-dnn-module-with-cuda-backend-support
 </br></br>
 Aplikacja wykorzystuje narzędzie YOLOv3. Do poprawnego działania narzędzia wymagane jest pobranie ze strony narzędzia</br>
 plików konfiguracyjnego (.cfg) oraz z wagami sieci (.weights). Następnie umiesczenie ich w folderze "yolo" w głównym</br> 
-folderze aplikacji z nazwami "yolov3-[<i>wersja np. tiny</i>].[<i>rozszerzenie weights lub cfg</i>]".  W przypadku uruchomienia programu tylko na CPU </br>
-zaleca się pobranie wersji tiny a w przypadku użycia technologi CUDA wersji 320.</br>
+folderze aplikacji z nazwami "yolov3-[<i>wersja np. tiny</i>].[<i>rozszerzenie weights lub cfg</i>]".  W przypadku uruchomienia programu</br>
+tylko na CPU zaleca się pobranie wersji tiny a w przypadku użycia technologi CUDA wersji 320.</br>
 Strona narzędzia YOLOv3:</br>
 https://pjreddie.com/darknet/yolo/
 
