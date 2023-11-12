@@ -20,8 +20,6 @@ Program ma zaimplementowane dwa tryby pracy: detekcja z kamery i detekcja z plik
 Wybór następuje w menu.</br></br>
 
 ![alt text](https://github.com/Mcoos11/Multipose_detect/blob/main/readme_img/img_1.png?raw=true)
-</br>
-![img_1.png](readme_img%2Fimg_1.png)
 </br></br>
 
 <ul>
